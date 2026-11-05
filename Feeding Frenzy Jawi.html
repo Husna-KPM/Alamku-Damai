@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Feeding Frenzy Jawi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lateef:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--ink:#eafcff;--gold:#ffc83d;--card:rgba(6,40,74,.92);--line:rgba(120,220,255,.35)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#04264a;font-family:'Lateef','Segoe UI',Tahoma,sans-serif;color:var(--ink)}
+canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block}
+#hud{position:fixed;left:0;right:0;top:0;display:none;gap:10px;align-items:center;justify-content:space-between;padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;pointer-events:none;font-size:clamp(1.3rem,3.4vmin,2rem);font-weight:700}
+.pill{background:rgba(3,30,60,.65);border:2px solid var(--line);border-radius:999px;padding:2px 16px;backdrop-filter:blur(4px);white-space:nowrap}
+#hearts{letter-spacing:3px;color:#ff5a6e}
+#prog{flex:1;max-width:280px;height:16px;border-radius:99px;background:rgba(3,30,60,.65);border:2px solid var(--line);overflow:hidden}
+#bar{height:100%;width:0;background:linear-gradient(90deg,#ffd84d,#ff9a3d);transition:width .25s}
+#tools{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:none;gap:8px}
+.ib{width:52px;height:52px;border-radius:50%;border:2px solid var(--line);background:rgba(3,30,60,.7);color:var(--ink);font-size:1.6rem;cursor:pointer;font-family:inherit}
+.ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));background:rgba(2,18,40,.62);overflow:auto;z-index:5}
+.ov.on{display:flex}
+.card{width:min(760px,100%);margin:auto;background:var(--card);border:3px solid var(--line);border-radius:26px;padding:clamp(14px,3vmin,30px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+h1{margin:0;font-size:clamp(2.4rem,8vmin,4.6rem);line-height:1;color:var(--gold);text-shadow:0 4px 0 #b3590c,0 8px 18px rgba(0,0,0,.45)}
+h1 small{display:block;font-size:.5em;color:#8fe6ff;text-shadow:none;margin-top:4px}
+ol{text-align:left;margin:14px auto;padding-left:1.6em;font-size:clamp(1.25rem,3vmin,1.7rem);line-height:1.25;max-width:660px}
+li{margin:5px 0}
+b{color:var(--gold)}
+.btn{font-family:inherit;font-weight:800;font-size:clamp(1.5rem,4vmin,2.2rem);padding:6px 34px 8px;border-radius:999px;border:0;cursor:pointer;color:#3b1d00;background:linear-gradient(#ffe27a,#ffa928);box-shadow:0 6px 0 #b35d00,0 10px 20px rgba(0,0,0,.4);transition:transform .1s}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #b35d00}
+.btn.alt{background:linear-gradient(#ff9aa6,#ec4a60);color:#fff;box-shadow:0 6px 0 #9b1d30,0 10px 20px rgba(0,0,0,.4)}
+.btn.go{background:linear-gradient(#8cf5a5,#22b85a);color:#042a12;box-shadow:0 6px 0 #11773a,0 10px 20px rgba(0,0,0,.4)}
+.btn:disabled{opacity:.5}
+.qn{font-size:clamp(1.2rem,3vmin,1.7rem);color:#8fe6ff;font-weight:700}
+.qp{font-size:clamp(1.2rem,3vmin,1.6rem)}
+.qw{font-size:clamp(2.2rem,7vmin,4rem);font-weight:800;color:var(--gold);line-height:1.1}
+#ans{direction:rtl;min-height:clamp(70px,13vmin,110px);margin:10px auto;border-radius:18px;border:3px dashed var(--line);background:rgba(0,0,0,.28);font-size:clamp(2.6rem,9vmin,5rem);line-height:1.5;padding:0 14px;display:flex;align-items:center;justify-content:center;max-width:560px}
+#ans.shake{animation:shake .4s}
+#cnt{font-size:1.3rem;color:#8fe6ff}
+#tiles{direction:rtl;display:flex;flex-wrap:wrap;gap:clamp(8px,1.8vmin,14px);justify-content:center;margin:10px 0 14px}
+.tile{width:clamp(56px,11vmin,88px);height:clamp(56px,11vmin,88px);border-radius:16px;border:0;font-family:'Lateef',serif;font-weight:700;font-size:clamp(2.2rem,7vmin,3.6rem);line-height:1;color:#0b2d52;background:linear-gradient(#fff,#bfe9ff);box-shadow:0 5px 0 #4a8db5;cursor:pointer;padding:0}
+.tile:active{transform:translateY(3px)}
+.tile.used{opacity:.25;pointer-events:none}
+#fb{min-height:2em;font-size:clamp(1.3rem,3.2vmin,1.8rem);font-weight:700;margin-top:10px}
+.row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+#banner{position:fixed;left:0;right:0;top:36%;text-align:center;font-size:clamp(3.2rem,15vmin,9rem);font-weight:800;color:var(--gold);text-shadow:0 6px 0 #b3590c,0 0 40px rgba(255,200,60,.8);pointer-events:none;opacity:0;z-index:9}
+#banner.pop{animation:pop 1.3s ease-out}
+@keyframes pop{0%{opacity:0;transform:scale(.3) rotate(-6deg)}20%{opacity:1;transform:scale(1.15) rotate(2deg)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.2) translateY(-40px)}}
+@keyframes shake{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+.big{font-size:clamp(3rem,10vmin,6rem);font-weight:800;color:var(--gold)}
+.stars{font-size:clamp(2.6rem,9vmin,5rem);color:var(--gold);letter-spacing:6px}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud">
+  <div class="pill">Markah: <span id="sc">0</span></div>
+  <div id="prog"><div id="bar"></div></div>
+  <div class="pill">Soalan <span id="qi">1</span>/10</div>
+  <div class="pill" id="hearts"></div>
+</div>
+<div id="tools"><button class="ib" id="mute" aria-label="Bunyi">🔊</button><button class="ib" id="fs" aria-label="Skrin penuh">⛶</button></div>
+<div id="banner"></div>
+
+<div class="ov on" id="start"><div class="card">
+  <h1>Feeding Frenzy<small>Ikan Jawi · ڤرمینن جاوي</small></h1>
+  <ol>
+    <li><b>Gerakkan</b> ikan anda menggunakan tetikus, jari (skrin sentuh) atau kekunci anak panah / W A S D.</li>
+    <li><b>Makan ikan yang lebih kecil</b> daripada anda. Selepas memakan 4 atau 5 ekor ikan kecil, satu soalan akan muncul.</li>
+    <li><b>Elakkan ikan besar.</b> Ikan besar akan mengejar anda apabila anda berada berdekatan. Jika dimakan, anda kehilangan 1 nyawa.</li>
+    <li>Huruf Jawi pada soalan <b>tidak tersusun</b>. Tekan huruf mengikut urutan yang betul untuk membentuk ejaan Jawi bagi perkataan yang diberi.</li>
+    <li>Tekan <b>Padam</b> untuk membuang huruf terakhir, kemudian tekan <b>Hantar</b> untuk menjawab.</li>
+    <li>Anda mempunyai <b>5 nyawa</b>. Jawapan yang salah akan menolak 1 nyawa. Terdapat <b>10 soalan</b>, setiap soalan bernilai <b>10 markah</b>.</li>
+  </ol>
+  <button class="btn" id="play">Mula Bermain</button>
+</div></div>
+
+<div class="ov" id="quiz"><div class="card">
+  <div class="qn" id="qn"></div>
+  <div class="qp">Susun huruf Jawi bagi perkataan:</div>
+  <div class="qw" id="qw"></div>
+  <div id="ans"></div>
+  <div id="cnt"></div>
+  <div id="tiles"></div>
+  <div class="row"><button class="btn alt" id="del">Padam</button><button class="btn go" id="sub">Hantar</button></div>
+  <div id="fb"></div>
+</div></div>
+
+<div class="ov" id="end"><div class="card">
+  <h1 id="et">Tamat</h1>
+  <div class="stars" id="es"></div>
+  <div class="big"><span id="ef">0</span> / 100</div>
+  <p id="em" style="font-size:clamp(1.4rem,3.4vmin,2rem);margin:6px 0 16px"></p>
+  <button class="btn" id="again">Main Semula</button>
+</div></div>
+
+<script>
+const WORDS=[["Nelayan","نلاين"],["Pendayung","ڤندايوڠ"],["Perahu","ڤراهو"],["Cencaru","چنچارو"],["Pepatung","ڤڤاتوڠ"],["Cengkerang","چڠکرڠ"],["Belalang","بلالڠ"],["Terumbu","ترومبو"],["Sembilang","سمبيلڠ"],["Belangkas","بلڠکس"]];
+const PRAISE=["Good!","Great!","Perfect!","Fantastic!","Excellent!","Amazing!","Brilliant!","Superb!"];
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d');
+let W,H,U,dpr;
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);U=Math.max(.55,Math.min(1.5,Math.min(W,H)/700))}
+addEventListener('resize',resize);resize();
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* ---------- Audio ---------- */
+let AC,master,muted=false,musicT,step=0;
+function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=muted?0:1;master.connect(AC.destination);startMusic()}catch(e){AC=null}}
+function tone(f,d,type='sine',v=.2,t0=0,f2){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+t0;o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(master);o.start(t);o.stop(t+d+.05)}
+const MEL=[523,0,659,0,784,659,0,587,523,0,440,0,392,440,523,0],BASS=[131,131,175,175,147,147,196,196];
+function startMusic(){clearInterval(musicT);musicT=setInterval(()=>{const m=MEL[step%16];if(m)tone(m,.4,'triangle',.05);if(step%2===0)tone(BASS[Math.floor(step/2)%8],.5,'sine',.07);if(step%4===0)tone(90,.12,'sine',.06,0,50);step++},280)}
+const sfx={
+ eat:()=>tone(450,.12,'square',.07,0,900),
+ ok:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.25,'triangle',.18,i*.1)),
+ bad:()=>{tone(240,.35,'sawtooth',.18,0,110);tone(170,.45,'sawtooth',.15,.2,80)},
+ hit:()=>tone(220,.45,'sawtooth',.2,0,50),
+ tap:()=>tone(700,.06,'sine',.12),
+ end:()=>[784,659,523,392].forEach((f,i)=>tone(f,.3,'triangle',.18,i*.15))
+};
+$('mute').onclick=()=>{muted=!muted;if(master)master.gain.value=muted?0:1;$('mute').textContent=muted?'🔇':'🔊'};
+$('fs').onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}catch(e){}};
+
+/* ---------- State ---------- */
+let G={run:false,pause:false},P,fish=[],texts=[],keys={},t=0;
+const bubbles=Array.from({length:30},()=>({x:rnd(0,1),y:rnd(0,1),r:rnd(2,7),s:rnd(.03,.1)}));
+P={x:0,y:0,tx:0,ty:0,r:24,dir:1,inv:0};
+
+function spawn(big,init){
+  const r=big?U*rnd(72,105):Math.min(U*38,P.r*U*0+Math.max(U*14,pr()*rnd(.35,.78)));
+  const dir=Math.random()<.5?1:-1;
+  const f={r,big,dir,x:init?rnd(0,W):(dir>0?-r*2.5:W+r*2.5),y:rnd(90*U,H-110*U),
+    base:dir*(big?rnd(60,105):rnd(55,140))*U,vx:0,vy:0,hue:big?rnd(-20,20):rnd(40,200),ph:rnd(0,6)};
+  f.vx=f.base;fish.push(f)}
+const pr=()=>U*Math.min(38,24+(G.eatenTotal||0)*.5);
+function fill(init){const nb=2+Math.floor((G.qi||0)/4);
+  const sm=fish.filter(f=>!f.big).length,bg=fish.filter(f=>f.big).length;
+  for(let i=sm;i<10;i++)spawn(false,init);for(let i=bg;i<nb;i++)spawn(true,init)}
+
+/* ---------- Flow ---------- */
+function hearts(){$('hearts').textContent='♥'.repeat(Math.max(0,G.lives))+'♡'.repeat(5-Math.max(0,G.lives))}
+function hud(){$('sc').textContent=G.score;$('qi').textContent=Math.min(10,G.qi+1);$('bar').style.width=(G.eaten/G.need*100)+'%';hearts()}
+function start(){
+  initAudio();
+  try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}catch(e){}
+  G={run:true,pause:false,score:0,lives:5,qi:0,eaten:0,need:4+Math.floor(Math.random()*2),order:shuffle(WORDS),streak:0,eatenTotal:0};
+  fish=[];texts=[];P.x=W/2;P.y=H/2;P.tx=P.x;P.ty=P.y;P.inv=1.5;
+  fill(true);hud();
+  $('start').classList.remove('on');$('end').classList.remove('on');
+  $('hud').style.display='flex';$('tools').style.display='flex';
+}
+$('play').onclick=start;$('again').onclick=start;
+
+function banner(s){const b=$('banner');b.textContent=s;b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop')}
+function float(s,x,y,c){texts.push({s,x,y,a:1,c:c||'#ffe27a'})}
+
+function finish(){
+  G.run=false;G.pause=true;$('quiz').classList.remove('on');$('hud').style.display='none';
+  const s=G.score,dead=G.lives<=0;sfx.end();
+  $('et').textContent=dead?'Nyawa Habis':'Tahniah!';
+  $('ef').textContent=s;
+  const st=s>=90?3:s>=60?2:s>=30?1:0;$('es').textContent='★'.repeat(st)+'☆'.repeat(3-st);
+  $('em').textContent=s>=90?'Luar biasa! Anda pakar ejaan Jawi!':s>=60?'Bagus! Teruskan berlatih.':'Jangan putus asa. Cuba lagi!';
+  $('end').classList.add('on');
+}
+
+/* ---------- Quiz ---------- */
+let Q;
+function ask(){
+  G.pause=true;const [rumi,jawi]=G.order[G.qi],L=Array.from(jawi);
+  let tl=L.map((c,i)=>i);do{tl=shuffle(tl)}while(L.length>1&&tl.every((v,i)=>L[v]===L[i]));
+  Q={L,jawi,tl,pick:[],lock:false};
+  $('qn').textContent='Soalan '+(G.qi+1)+' / 10';$('qw').textContent=rumi;$('fb').textContent='';
+  const box=$('tiles');box.innerHTML='';
+  tl.forEach(i=>{const b=document.createElement('button');b.className='tile';b.textContent=L[i];b.dataset.i=i;
+    b.onclick=()=>{if(Q.lock)return;Q.pick.push(i);b.classList.add('used');sfx.tap();show()};box.appendChild(b)});
+  show();$('quiz').classList.add('on');
+}
+function show(){$('ans').textContent=Q.pick.map(i=>Q.L[i]).join('');$('cnt').textContent=Q.pick.length+' / '+Q.L.length+' huruf'}
+$('del').onclick=()=>{if(Q.lock||!Q.pick.length)return;const i=Q.pick.pop();document.querySelector('.tile[data-i="'+i+'"]').classList.remove('used');sfx.tap();show()};
+$('sub').onclick=()=>{
+  if(Q.lock)return;
+  if(Q.pick.length<Q.L.length){$('fb').textContent='Sila gunakan semua huruf dahulu.';const a=$('ans');a.classList.remove('shake');void a.offsetWidth;a.classList.add('shake');return}
+  Q.lock=true;
+  if(Q.pick.map(i=>Q.L[i]).join('')===Q.jawi){
+    G.score+=10;G.streak++;sfx.ok();$('fb').style.color='#8cf5a5';$('fb').textContent='Betul! +10 markah';
+    setTimeout(()=>{$('quiz').classList.remove('on');banner(G.streak>=3?'Fantastic!':PRAISE[Math.floor(Math.random()*PRAISE.length)]);next()},900);
+  }else{
+    G.lives--;G.streak=0;sfx.bad();hearts();$('fb').style.color='#ff8a98';
+    $('fb').innerHTML='Salah! Jawapan betul: <span style="font-size:1.6em;color:#ffe27a">'+Q.jawi+'</span>';
+    setTimeout(()=>{$('quiz').classList.remove('on');next()},2200);
+  }
+};
+function next(){
+  G.qi++;G.eaten=0;G.need=4+Math.floor(Math.random()*2);hud();
+  if(G.lives<=0||G.qi>=10){setTimeout(finish,G.lives<=0?200:1100);return}
+  G.pause=false;P.inv=1.5;
+}
+
+/* ---------- Input ---------- */
+function ptr(e){if(!G.run||G.pause)return;P.tx=e.clientX;P.ty=e.clientY}
+cv.addEventListener('pointermove',ptr);cv.addEventListener('pointerdown',ptr);
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.startsWith('Arrow'))e.preventDefault()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+
+/* ---------- Update ---------- */
+function update(dt){
+  t+=dt;
+  bubbles.forEach(b=>{b.y-=b.s*dt;if(b.y<-.05){b.y=1.05;b.x=Math.random()}});
+  if(G.pause&&G.run)return;
+  if(G.run){
+    const kx=(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0),ky=(keys.arrowdown||keys.s?1:0)-(keys.arrowup||keys.w?1:0);
+    if(kx||ky){P.tx=P.x+kx*220*U;P.ty=P.y+ky*220*U}
+    P.r=pr();const dx=P.tx-P.x,dy=P.ty-P.y,d=Math.hypot(dx,dy);
+    if(d>3){const v=Math.min(430*U,d*5);P.x+=dx/d*v*dt;P.y+=dy/d*v*dt;if(Math.abs(dx)>6)P.dir=dx>0?1:-1}
+    P.x=Math.max(P.r,Math.min(W-P.r,P.x));P.y=Math.max(70*U,Math.min(H-P.r*.6-30,P.y));
+    if(P.inv>0)P.inv-=dt;
+  }
+  for(let i=fish.length-1;i>=0;i--){
+    const f=fish[i];
+    if(f.big&&G.run){
+      const dx=P.x-f.x,dy=P.y-f.y,d=Math.hypot(dx,dy);
+      if(d<310*U){const sp=175*U;f.vx+=(dx/d*sp-f.vx)*dt*1.6;f.vy+=(dy/d*sp-f.vy)*dt*1.6}
+      else{f.vx+=(f.base-f.vx)*dt;f.vy+=(0-f.vy)*dt}
+    }else{f.vx+=(f.base-f.vx)*dt}
+    f.x+=f.vx*dt;f.y+=f.vy*dt;f.y=Math.max(70*U,Math.min(H-50*U,f.y));
+    if(Math.abs(f.vx)>8*U)f.dir=f.vx>0?1:-1;
+    if(f.x<-400||f.x>W+400){fish.splice(i,1);continue}
+    if(!G.run)continue;
+    const d=Math.hypot(P.x-f.x,P.y-f.y);
+    if(!f.big&&d<P.r*.85+f.r*.4){
+      fish.splice(i,1);G.eaten++;G.eatenTotal++;sfx.eat();float('+',f.x,f.y);
+      if(Math.random()<.3)float(['Good!','Nice!','Yum!'][Math.floor(Math.random()*3)],P.x,P.y-P.r*1.4,'#fff');
+      hud();
+      if(G.eaten>=G.need){G.eaten=G.need;hud();setTimeout(ask,350);G.pause=true}
+    }else if(f.big&&P.inv<=0&&d<f.r*.8+P.r*.35){
+      G.lives--;G.streak=0;sfx.hit();float('Aduh!',P.x,P.y-P.r,'#ff7a8a');hud();
+      P.inv=2.2;P.x=W/2;P.y=H/2;P.tx=P.x;P.ty=P.y;f.x+=f.dir*-f.r*3;
+      if(G.lives<=0){G.pause=true;setTimeout(finish,500)}
+    }
+  }
+  fill(false);
+  texts.forEach(x=>{x.y-=40*dt;x.a-=dt*.9});texts=texts.filter(x=>x.a>0);
+}
+
+/* ---------- Draw ---------- */
+function drawFish(f,x,y,r,dir,col,dark,big,ph){
+  ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
+  const w=Math.sin(t*8+ph)*.25;
+  ctx.fillStyle=dark;ctx.beginPath();ctx.moveTo(-r*.8,0);ctx.lineTo(-r*1.55,-r*.55+w*r*.5);ctx.lineTo(-r*1.55,r*.55+w*r*.5);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(-r*.2,-r*.5);ctx.quadraticCurveTo(0,-r*1,r*.3,-r*.5);ctx.fill();
+  const g=ctx.createLinearGradient(0,-r*.6,0,r*.6);g.addColorStop(0,col);g.addColorStop(1,dark);
+  ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(0,0,r,r*.6,0,0,7);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=Math.max(1.5,r*.05);ctx.beginPath();ctx.arc(-r*.1,0,r*.5,-1,1);ctx.stroke();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(r*.52,-r*.16,r*.17,0,7);ctx.fill();
+  ctx.fillStyle='#111';ctx.beginPath();ctx.arc(r*.57,-r*.16,r*.08,0,7);ctx.fill();
+  if(big){ctx.strokeStyle='#220010';ctx.lineWidth=r*.07;ctx.beginPath();ctx.moveTo(r*.3,-r*.38);ctx.lineTo(r*.75,-r*.24);ctx.stroke();
+    ctx.fillStyle='#fff';for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(r*(.62+i*.1),r*.18);ctx.lineTo(r*(.67+i*.1),r*.34);ctx.lineTo(r*(.72+i*.1),r*.16);ctx.fill()}}
+  else{ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=r*.07;ctx.beginPath();ctx.arc(r*.75,r*.1,r*.15,.2,1.6);ctx.stroke()}
+  ctx.restore()}
+function draw(){
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#2bb5e8');g.addColorStop(.55,'#0b6aa8');g.addColorStop(1,'#04264a');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,255,255,.07)';
+  for(let i=0;i<5;i++){const x=W*(i/5)+Math.sin(t*.3+i)*40;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+120*U,0);ctx.lineTo(x+W*.12-40,H);ctx.lineTo(x-W*.1,H);ctx.fill()}
+  bubbles.forEach(b=>{ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(b.x*W+Math.sin(t+b.r)*8,b.y*H,b.r*U,0,7);ctx.stroke()});
+  ctx.fillStyle='#c9a15a';ctx.beginPath();ctx.moveTo(0,H);for(let x=0;x<=W;x+=40)ctx.lineTo(x,H-26*U-Math.sin(x*.01)*10*U);ctx.lineTo(W,H);ctx.fill();
+  ctx.lineWidth=7*U;ctx.lineCap='round';
+  for(let i=0;i<9;i++){const x=W*(i+.5)/9;ctx.strokeStyle=i%2?'#2f9e5b':'#1f8a4c';ctx.beginPath();ctx.moveTo(x,H-20*U);ctx.quadraticCurveTo(x+Math.sin(t*1.2+i)*22*U,H-70*U,x+Math.sin(t*1.2+i+1)*16*U,H-(110+(i%3)*25)*U);ctx.stroke()}
+  fish.forEach(f=>{const c=f.big?`hsl(${f.hue},70%,48%)`:`hsl(${f.hue},85%,60%)`,d=f.big?`hsl(${f.hue},70%,25%)`:`hsl(${f.hue},70%,35%)`;
+    drawFish(f,f.x,f.y,f.r,f.dir,c,d,f.big,f.ph)});
+  if(G.run){
+    if(!(P.inv>0&&Math.floor(t*10)%2)){
+      if(P.inv>0){ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(P.x,P.y,P.r*1.5,0,7);ctx.stroke()}
+      drawFish(P,P.x,P.y,P.r,P.dir,'#ffc83d','#e0670b',false,0)}
+  }
+  ctx.textAlign='center';ctx.font='800 '+Math.round(30*U)+'px Lateef, sans-serif';
+  texts.forEach(x=>{ctx.globalAlpha=Math.max(0,x.a);ctx.fillStyle=x.c;ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=4;ctx.strokeText(x.s,x.x,x.y);ctx.fillText(x.s,x.x,x.y);ctx.globalAlpha=1});
+}
+let last=performance.now();
+function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;update(dt);draw();requestAnimationFrame(loop)}
+fill(true);requestAnimationFrame(loop);
+document.addEventListener('visibilitychange',()=>{if(AC)document.hidden?AC.suspend():AC.resume()});
+</script>
+</body>
+</html>
